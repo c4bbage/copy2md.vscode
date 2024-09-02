@@ -1,127 +1,116 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
-    let disposable = vscode.commands.registerCommand('extension.copyAsMarkdown', async () => {
-        const editor = vscode.window.activeTextEditor;
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    let copyAllOpenedTabs = vscode.commands.registerCommand('extension.copyAllOpenedTabsAsMarkdown', copyAllOpenedTabsAsMarkdown);
+    let copyCode = vscode.commands.registerCommand('extension.copyCodeAsMarkdown', copyCodeAsMarkdown);
+    let copyFile = vscode.commands.registerCommand('extension.copyFileAsMarkdown', (uri: vscode.Uri, uris: vscode.Uri[]) => copyFileAsMarkdown(uri, uris));
 
-        if (!workspaceFolder) {
-            vscode.window.showErrorMessage('No workspace folder open');
-            return;
-        }
-
-        let markdownContent = '';
-
-        if (editor && editor.selection) {
-            // 选中代码的情况
-            const document = editor.document;
-            const selection = editor.selection;
-            const selectedText = document.getText(selection);
-            const filePath = vscode.workspace.asRelativePath(document.uri);
-
-            markdownContent = generateMarkdownForSelection(workspaceFolder.name, filePath, selectedText);
-        } else {
-            // 选中文件或文件夹的情况
-            const selectedItems = vscode.window.activeTextEditor
-                ? [vscode.window.activeTextEditor.document.uri]
-                : vscode.window.visibleTextEditors.map(editor => editor.document.uri);
-
-            if (selectedItems.length === 0) {
-                const explorerSelection = await vscode.window.showOpenDialog({
-                    canSelectMany: true,
-                    openLabel: 'Select',
-                    canSelectFiles: true,
-                    canSelectFolders: true
-                });
-
-                if (explorerSelection) {
-                    selectedItems.push(...explorerSelection);
-                }
-            }
-
-            if (selectedItems.length > 0) {
-                markdownContent = await generateMarkdownForFiles(workspaceFolder, selectedItems);
-            }
-        }
-
-        if (markdownContent) {
-            await vscode.env.clipboard.writeText(markdownContent);
-            vscode.window.showInformationMessage('Content copied to clipboard as Markdown');
-        } else {
-            vscode.window.showWarningMessage('No content to copy');
-        }
-    });
-
-    context.subscriptions.push(disposable);
+    context.subscriptions.push(copyAllOpenedTabs, copyCode, copyFile);
 }
 
-function generateMarkdownForSelection(projectName: string, filePath: string, selectedText: string): string {
-    return `## Project: ${projectName}
-File: ${filePath}
+async function copyAllOpenedTabsAsMarkdown() {
+    const project = vscode.workspace.workspaceFolders?.[0];
+    if (!project) return;
 
-\`\`\`
-${selectedText}
-\`\`\`
-`;
-}
+    const allOpenFiles = vscode.workspace.textDocuments.filter(doc => doc.uri.scheme === 'file');
 
-async function generateMarkdownForFiles(workspaceFolder: vscode.WorkspaceFolder, uris: vscode.Uri[]): Promise<string> {
-    let markdownContent = `## Project: ${workspaceFolder.name}\n\n`;
+    if (allOpenFiles.length === 0) return;
 
-    for (const uri of uris) {
-        const filePath = vscode.workspace.asRelativePath(uri);
-        const stat = await vscode.workspace.fs.stat(uri);
+    let allFilesMarkdown = `Project Name: ${project.name}\n\n`;
 
-        if (stat.type === vscode.FileType.Directory) {
-            markdownContent += await processDirectory(uri, filePath);
-        } else if (stat.type === vscode.FileType.File) {
-            markdownContent += await processFile(uri, filePath);
+    for (const file of allOpenFiles) {
+        if (isImageFile(file.fileName)) {
+            const safeFileName = escapeMarkdown(path.basename(file.fileName));
+            allFilesMarkdown += `![Image: ${safeFileName}](${getRelativePath(project, file.uri)})\n\n`;
+            continue;
         }
+
+        const content = file.getText();
+        allFilesMarkdown += `## File: ${getRelativePath(project, file.uri)}\n\n`;
+        allFilesMarkdown += `\`\`\`${file.languageId}\n${content}\n\`\`\`\n\n`;
     }
 
-    return markdownContent;
+    await vscode.env.clipboard.writeText(allFilesMarkdown);
+    vscode.window.showInformationMessage('All opened tabs copied as Markdown');
 }
 
-async function processDirectory(uri: vscode.Uri, directoryPath: string): Promise<string> {
-    let content = `### Directory: ${directoryPath}\n\n`;
-    const entries = await vscode.workspace.fs.readDirectory(uri);
+async function copyCodeAsMarkdown() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
 
-    for (const [name, type] of entries) {
-        const entryUri = vscode.Uri.joinPath(uri, name);
-        const entryPath = path.join(directoryPath, name);
+    const selection = editor.selection;
+    const selectedText = editor.document.getText(selection);
+    if (!selectedText) return;
 
-        if (type === vscode.FileType.Directory) {
-            content += await processDirectory(entryUri, entryPath);
-        } else if (type === vscode.FileType.File) {
-            content += await processFile(entryUri, entryPath);
+    const project = vscode.workspace.workspaceFolders?.[0];
+    if (!project) return;
+
+    const relativePath = getRelativePath(project, editor.document.uri);
+    const fileExtension = path.extname(editor.document.fileName).slice(1);
+
+    // 获取选中文本的起始和结束行号
+    const startLine = selection.start.line + 1; // VSCode 行号从0开始，所以加1
+    const endLine = selection.end.line + 1;
+
+    let markdownBuilder = "\n";
+    markdownBuilder += `# Project Name: ${project.name}\n\n`;
+    markdownBuilder += `## File: ${relativePath} `;
+    markdownBuilder += `Lines ${startLine}-${endLine}\n\n`; // 添加行号信息
+    markdownBuilder += `\`\`\`${fileExtension}\n${selectedText}\n\`\`\``;
+
+    await vscode.env.clipboard.writeText(markdownBuilder);
+    vscode.window.showInformationMessage(`Selected code (lines ${startLine}-${endLine}) copied as Markdown`);
+}
+
+async function copyFileAsMarkdown(uri: vscode.Uri | undefined, uris: vscode.Uri[] | undefined) {
+    const project = vscode.workspace.workspaceFolders?.[0];
+    if (!project) return;
+
+    let files: vscode.Uri[] = [];
+    if (uris && uris.length > 0) {
+        // 多文件选择情况
+        files = uris;
+    } else if (uri) {
+        // 单文件选择情况
+        files = [uri];
+    } else if (vscode.window.activeTextEditor) {
+        // 当前活动编辑器情况
+        files = [vscode.window.activeTextEditor.document.uri];
+    }
+
+    if (files.length === 0) return;
+
+    let markdown = `Project Name: ${project.name}\n\n`;
+
+    for (const file of files) {
+        if (isImageFile(file.fsPath)) {
+            const safeFileName = escapeMarkdown(path.basename(file.fsPath));
+            markdown += `![Image: ${safeFileName}](${getRelativePath(project, file)})\n\n`;
+            continue;
         }
+
+        const document = await vscode.workspace.openTextDocument(file);
+        const content = document.getText();
+        markdown += `## File: ${getRelativePath(project, file)}\n\n`;
+        markdown += `\`\`\`${document.languageId}\n${content}\n\`\`\`\n\n`;
     }
 
-    return content;
+    await vscode.env.clipboard.writeText(markdown);
+    vscode.window.showInformationMessage(`${files.length} file(s) copied as Markdown`);
 }
 
-async function processFile(uri: vscode.Uri, filePath: string): Promise<string> {
-    if (isTextFile(filePath)) {
-        const fileContent = await vscode.workspace.fs.readFile(uri);
-        const text = new TextDecoder().decode(fileContent);
-
-        return `#### File: ${filePath}
-
-\`\`\`
-${text}
-\`\`\`
-
-`;
-    }
-    return '';
+function isImageFile(filePath: string): boolean {
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp'];
+    return imageExtensions.includes(path.extname(filePath).toLowerCase());
 }
 
-function isTextFile(filePath: string): boolean {
-    const textExtensions = ['.txt', '.md', '.js', '.ts', '.html', '.css', '.json', '.xml', '.yml', '.yaml', '.ini', '.conf', '.sh', '.bat', '.ps1', '.py', '.rb', '.php', '.java', '.c', '.cpp', '.h', '.hpp', '.cs', '.vb', '.sql'];
-    const ext = path.extname(filePath).toLowerCase();
-    return textExtensions.includes(ext);
+function escapeMarkdown(text: string): string {
+    return text.replace(/([[\]()\\])/g, '\\$1');
+}
+
+function getRelativePath(project: vscode.WorkspaceFolder, file: vscode.Uri): string {
+    return path.relative(project.uri.fsPath, file.fsPath).replace(/\\/g, '/');
 }
 
 export function deactivate() {}
