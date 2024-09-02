@@ -32,7 +32,7 @@ VS Code Markdown Copier is a powerful extension that allows you to easily copy c
 3. Search for "VS Code Markdown Copier"
 4. Click Install
 
-Alternatively, you can download the .vsix file from the [releases page](https://github.com/yourusername/vscode-markdown-copier/releases) and install it manually.
+Alternatively, you can download the .vsix file from the [releases page](https://github.com/c4bbage/copy2md.vscode) and install it manually.
 
 ## Usage
 
@@ -51,7 +51,7 @@ This extension does not add any VS Code settings.
 
 ## Known Issues
 
-Currently, there are no known issues. If you encounter any problems, please report them on the [GitHub issues page](https://github.com/yourusername/vscode-markdown-copier/issues).
+Currently, there are no known issues. If you encounter any problems, please report them on the [GitHub issues page](https://github.com/c4bbage/copy2md.vscode/issues).
 
 ## Contributing
 
@@ -70,9 +70,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Your Name - [@yourtwitter](https://twitter.com/) - email@example.com
 
-Project Link: [https://github.com/yourusername/vscode-markdown-copier](https://github.com/yourusername/vscode-markdown-copier)
+Project Link: [https://github.com/c4bbage/copy2md.vscode](https://github.com/c4bbage/copy2md.vscode)
 
 ## Acknowledgements
 
