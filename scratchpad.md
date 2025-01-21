@@ -38,6 +38,26 @@ The implementation looks good and includes:
     - Current feature names and functionality
     - Removed unnecessary sections
     - Added clear feature descriptions
+[X] Added GitHub Actions workflow for automatic VSIX building:
+    - Triggers on version tag pushes (v*)
+    - Runs tests
+    - Builds VSIX package
+    - Creates GitHub release with VSIX attached
+[X] Updated package.json scripts for better build process
+[X] Added MIT LICENSE file to comply with package requirements
+
+## How to Release New Version
+1. Update version in package.json
+2. Commit changes
+3. Create and push a new tag:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+4. GitHub Actions will automatically:
+   - Build the VSIX
+   - Create a GitHub release
+   - Attach the VSIX to the release
 
 ## Lessons
 - The extension uses proper VSCode extension patterns:
