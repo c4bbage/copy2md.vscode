@@ -1,79 +1,51 @@
-# VS Code Markdown Copier Extension
+# copy2md
 
-## Description
-
-VS Code Markdown Copier is a powerful extension that allows you to easily copy code, files, and folders as Markdown-formatted text. This extension is perfect for developers who frequently need to share code snippets or file contents in a Markdown-friendly format, such as for documentation or collaborative discussions.
+A VSCode extension that helps you copy code and files as Markdown with proper formatting.
 
 ## Features
 
-1. **Copy Selected Code as Markdown**: 
+1. **Copy Selection → Markdown**: 
    - Select code in the editor
-   - Right-click and choose "Copy as Markdown"
-   - The selected code, along with the project name and file path, is copied to the clipboard in Markdown format
+   - Right-click and choose "Copy Selection → Markdown"
+   - The selected code is copied with:
+     - Project name
+     - File path
+     - Line numbers
+     - Language-specific syntax highlighting
 
-2. **Copy Single or Multiple Files as Markdown**:
-   - Select one or more files in the Explorer
-   - Right-click and choose "Copy as Markdown"
-   - The content of the selected files, along with the project name and file paths, is copied to the clipboard in Markdown format
+2. **Copy File → Markdown**:
+   - Works in both editor and explorer:
+     - Right-click in editor to copy current file
+     - Select file(s) in explorer to copy multiple files
+   - Supports both code files and images
+   - Includes project name and relative paths
+   - Maintains code structure with language detection
 
-3. **Copy Folders as Markdown**:
-   - Select a folder in the Explorer
-   - Right-click and choose "Copy as Markdown"
-   - The content of all text files within the folder (including subfolders) is recursively copied to the clipboard in Markdown format, along with the project name and file paths
-
-4. **Smart File Type Detection**:
-   - Automatically detects and processes only text-based files
-   - Ignores binary files like images and audio files
+3. **Copy Tabs → Markdown**:
+   - Right-click in editor and choose "Copy Tabs → Markdown"
+   - Copies all currently opened editor tabs
+   - Handles both code files and images
+   - Includes project name and paths
+   - Uses proper language detection for syntax highlighting
 
 ## Installation
 
 1. Open Visual Studio Code
-2. Go to the Extensions view (Ctrl+Shift+X or Cmd+Shift+X)
-3. Search for "VS Code Markdown Copier"
+2. Go to Extensions (Ctrl+Shift+X or Cmd+Shift+X)
+3. Search for "copy2md"
 4. Click Install
 
-Alternatively, you can download the .vsix file from the [releases page](https://github.com/c4bbage/copy2md.vscode) and install it manually.
-
-## Usage
-
-1. Select code, file(s), or folder(s) in VS Code
-2. Right-click to open the context menu
-3. Choose "Copy as Markdown"
-4. The selected content is now in your clipboard, formatted as Markdown
+Or install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=c4bbage.copy2md)
 
 ## Requirements
 
 - Visual Studio Code version 1.60.0 or higher
 
-## Extension Settings
-
-This extension does not add any VS Code settings.
-
-## Known Issues
-
-Currently, there are no known issues. If you encounter any problems, please report them on the [GitHub issues page](https://github.com/c4bbage/copy2md.vscode/issues).
-
-## Contributing
-
-Contributions are welcome! Here's how you can contribute:
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/AmazingFeature`)
-3. Make your changes
-4. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-5. Push to the branch (`git push origin feature/AmazingFeature`)
-6. Open a Pull Request
-
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contact
+## Links
 
-
-Project Link: [https://github.com/c4bbage/copy2md.vscode](https://github.com/c4bbage/copy2md.vscode)
-
-## Acknowledgements
-
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [VS Code Extension API](https://code.visualstudio.com/api)
+- [GitHub Repository](https://github.com/c4bbage/copy2md.vscode)
+- [Report Issues](https://github.com/c4bbage/copy2md.vscode/issues)

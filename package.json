@@ -1,8 +1,8 @@
 {
   "name": "copy2md",
-  "displayName": "Copy to Markdown",
+  "displayName": "copy2md",
   "description": "Copy code, files, and folders as Markdown",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "c4bbage",
   "engines": {
     "vscode": "^1.60.0"
@@ -25,15 +25,15 @@
     "commands": [
       {
         "command": "extension.copyAllOpenedTabsAsMarkdown",
-        "title": "Copy All Opened Tabs as Markdown"
+        "title": "Copy Tabs → Markdown"
       },
       {
         "command": "extension.copyCodeAsMarkdown",
-        "title": "Copy Selected Code as Markdown"
+        "title": "Copy Selection → Markdown"
       },
       {
         "command": "extension.copyFileAsMarkdown",
-        "title": "Copy File(s) as Markdown"
+        "title": "Copy File → Markdown"
       }
     ],
     "menus": {
@@ -41,6 +41,14 @@
         {
           "when": "editorHasSelection",
           "command": "extension.copyCodeAsMarkdown",
+          "group": "clipboard"
+        },
+        {
+          "command": "extension.copyFileAsMarkdown",
+          "group": "clipboard"
+        },
+        {
+          "command": "extension.copyAllOpenedTabsAsMarkdown",
           "group": "clipboard"
         }
       ],
