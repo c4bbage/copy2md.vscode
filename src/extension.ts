@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
     let copyAllOpenedTabs = vscode.commands.registerCommand('extension.copyAllOpenedTabsAsMarkdown', copyAllOpenedTabsAsMarkdown);
@@ -84,15 +85,32 @@ async function copyFileAsMarkdown(uri: vscode.Uri | undefined, uris: vscode.Uri[
     let markdown = `Project Name: ${project.name}\n\n`;
 
     for (const file of files) {
+        const relativePath = getRelativePath(project, file);
+
+        // 检查是否为目录
+        if (fs.statSync(file.fsPath).isDirectory()) {
+            markdown += `## Directory: ${relativePath}/\n\n`;
+            // 递归列出目录中的文件
+            const filesInDir = getFilesInDirectory(file.fsPath, project.uri.fsPath);
+            if (filesInDir.length > 0) {
+                markdown += `Files in this directory:\n`;
+                for (const fileInDir of filesInDir) {
+                    markdown += `- ${fileInDir}\n`;
+                }
+                markdown += `\n`;
+            }
+            continue;
+        }
+
         if (isImageFile(file.fsPath)) {
             const safeFileName = escapeMarkdown(path.basename(file.fsPath));
-            markdown += `![Image: ${safeFileName}](${getRelativePath(project, file)})\n\n`;
+            markdown += `![Image: ${safeFileName}](${relativePath})\n\n`;
             continue;
         }
 
         const document = await vscode.workspace.openTextDocument(file);
         const content = document.getText();
-        markdown += `## File: ${getRelativePath(project, file)}\n\n`;
+        markdown += `## File: ${relativePath}\n\n`;
         markdown += `\`\`\`${document.languageId}\n${content}\n\`\`\`\n\n`;
     }
 
@@ -111,6 +129,42 @@ function escapeMarkdown(text: string): string {
 
 function getRelativePath(project: vscode.WorkspaceFolder, file: vscode.Uri): string {
     return path.relative(project.uri.fsPath, file.fsPath).replace(/\\/g, '/');
+}
+
+function getFilesInDirectory(dirPath: string, projectRoot: string): string[] {
+    const files: string[] = [];
+    const excludeDirs = ['node_modules', '.git', '.vscode', 'out', 'dist', 'build', 'vendor'];
+
+    function traverseDirectory(currentPath: string, relativeBase: string) {
+        try {
+            const items = fs.readdirSync(currentPath);
+
+            for (const item of items) {
+                const fullPath = path.join(currentPath, item);
+                const relativePath = path.join(relativeBase, item).replace(/\\/g, '/');
+
+                const stat = fs.statSync(fullPath);
+
+                if (stat.isDirectory()) {
+                    // 排除不需要的目录
+                    if (!excludeDirs.includes(item)) {
+                        traverseDirectory(fullPath, relativePath);
+                    }
+                } else {
+                    // 只添加文件，不添加目录
+                    files.push(relativePath);
+                }
+            }
+        } catch (error) {
+            // 忽略访问权限错误等
+            console.warn(`Could not read directory: ${currentPath}`);
+        }
+    }
+
+    const relativeDir = path.relative(projectRoot, dirPath).replace(/\\/g, '/');
+    traverseDirectory(dirPath, relativeDir);
+
+    return files;
 }
 
 export function deactivate() {}
