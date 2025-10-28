@@ -2,7 +2,7 @@
   "name": "copy2md",
   "displayName": "copy2md",
   "description": "Copy code, files, and folders as Markdown",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "c4bbage",
   "engines": {
     "vscode": "^1.60.0"
